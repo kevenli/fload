@@ -1,10 +1,10 @@
 
 
 class Pipeline:
-    pass
+    def add_arguments(self, parser):
+        pass
 
 
 class Source:
-    pass
-
-
+    def add_arguments(self, parser):
+        pass

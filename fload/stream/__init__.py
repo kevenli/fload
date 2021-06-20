@@ -1,6 +1,6 @@
-from ..base import Pipeline
+from ..base import Pipeline, Source
 from .source.csv import CSVSource
 from .pipeline.last_field_to_file import LastFieldToFile
 
-csvsource = CSVSource
+csv = CSVSource
 last_field_to_field = LastFieldToFile

@@ -14,9 +14,6 @@ setup(
         'console_scripts': [
             'fload = fload.cmds.fload:main',
         ],
-        'fload_modules': [
-            '_ = album_download'
-        ]
     },
     install_requires=read_file('requirements.txt'),
 )

@@ -3,6 +3,7 @@ import logging
 import json
 import pkg_resources
 import sys
+import types
 
 from fload.log import setup_logging
 
@@ -80,17 +81,31 @@ def main():
         getattr(mod, 'init')(ops)
 
     setup_logging()
-    
-    for line in sys.stdin:
-        item = json.loads(line)
+
+    if hasattr(mod, 'start'):
+        for item in run_start(mod):
+            print(json.dumps(item))
+
+    if hasattr(mod, 'process'):
         try:
-            ret = mod.process(item)
-            
-            if ret:
-                print(json.dumps(ret))
+            for line in sys.stdin:
+                item = json.loads(line)
+                ret = mod.process(item)
+                if ret:
+                    print(json.dumps(ret))
+
         except Exception as ex:
             logger.error('Error when processing item %s', item, exc_info=ex)
             sys.exit(1)
+
+
+def run_start(mod):
+    ret = mod.start()
+    if not isinstance(ret, types.GeneratorType):
+        ret = [ret]
+    
+    for item in ret:
+        yield item
 
 
 if __name__ == '__main__':
