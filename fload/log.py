@@ -2,6 +2,7 @@ import os
 import yaml
 import logging.config
 import logging
+import sys
 
 
 def setup_logging(default_path='conf/logging.yaml', default_level=logging.INFO, env_key='LOG_CFG'):
@@ -20,10 +21,10 @@ def setup_logging(default_path='conf/logging.yaml', default_level=logging.INFO, 
                 logging.config.dictConfig(config)
                 # coloredlogs.install()
             except Exception as e:
-                print(e)
-                print('Error in Logging Configuration. Using default configs')
+                sys.stderr.write(e)
+                sys.stderr.write('Error in Logging Configuration. Using default configs')
                 logging.basicConfig(level=default_level)
                 # coloredlogs.install(level=default_level)
     else:
         logging.basicConfig(level=default_level)
-        print('Failed to load configuration file. Using default configs')
+        sys.stderr.write('Failed to load configuration file. Using default configs')

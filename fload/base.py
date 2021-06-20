@@ -1,10 +1,16 @@
+class FloadModule:
+    def init(self, ops):
+        pass
 
-
-class Pipeline:
     def add_arguments(self, parser):
+        pass 
+
+
+class Pipeline(FloadModule):
+    def process(self, item):
         pass
 
 
-class Source:
-    def add_arguments(self, parser):
+class Source(FloadModule):
+    def start(self):
         pass
