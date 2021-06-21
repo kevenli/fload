@@ -119,6 +119,7 @@ class ImapScaner(Source):
     imap_client: ImapClient = None
     mailbox: str = None
     list_mailboxes: bool = False
+    start_uid: int = 1
 
     def add_arguments(self, parser):
         parser.add_argument('--imap-server')
@@ -128,6 +129,8 @@ class ImapScaner(Source):
         parser.add_argument('--imap-pass')
         parser.add_argument('--mailbox', default='INBOX')
         parser.add_argument('--list-mailboxes', type=bool, default=False, nargs='?')
+        parser.add_argument('--start-uid', type=int, default=1)
+        parser.add_argument('--start-uid-file')
 
     def init(self, ops):
         imap_server = ops.imap_server
@@ -137,18 +140,30 @@ class ImapScaner(Source):
         imap_pass = ops.imap_pass
         self.mailbox = ops.mailbox
         self.list_mailboxes = ops.list_mailboxes
+        if ops.start_uid_file:
+            start_uid_text = ''
+            if os.path.exists(ops.start_uid_file):
+                with open(ops.start_uid_file, 'r') as f:
+                    start_uid_text = f.read()
+            
+            if start_uid_text:
+                self.start_uid = int(start_uid_text)
+        else:
+            self.start_uid = ops.start_uid
 
-        self.imap_client = ImapClient(imap_server, imap_port, imap_user, imap_pass, ops.mailbox)
+        debug = False
+        self.imap_client = ImapClient(imap_server, imap_port, imap_user, imap_pass, ops.mailbox, debug=debug)
         self.imap_client.connect()
 
     def start(self):
+        logger.debug('start, start_uid %s', self.start_uid)
         imap_conn = self.imap_client
         if self.list_mailboxes:
             for item in self.list_dirs():
                 yield item
             return
 
-        search_results = self.imap_client.uid('search', None, 'ALL')[1][0].split()
+        search_results = self.imap_client.uid('search', None, f'UID {self.start_uid}:*')[1][0].split()
         len_results = len(search_results)
         for i, uid in enumerate(search_results):
             uid = uid.decode()
@@ -174,7 +189,7 @@ class ImapScaner(Source):
                 'msg_id': msg_id, 
                 'date': local_date, 
                 'mailbox': self.mailbox,
-                'uid': uid,  
+                'uid': int(uid),  
             }
             yield doc
 
