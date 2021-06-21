@@ -3,3 +3,4 @@ lockfile
 fasteners
 pyaml
 python-dateutil
+six
