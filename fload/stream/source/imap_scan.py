@@ -119,7 +119,7 @@ class ImapScaner(Source):
     imap_client: ImapClient = None
     mailbox: str = None
     list_mailboxes: bool = False
-    start_uid: int = 1
+    start_uid: int = None
 
     def add_arguments(self, parser):
         parser.add_argument('--imap-server')
@@ -163,7 +163,11 @@ class ImapScaner(Source):
                 yield item
             return
 
-        search_results = self.imap_client.uid('search', None, f'UID {self.start_uid}:*')[1][0].split()
+        if self.start_uid:
+            search_results = self.imap_client.uid('search', None, f'UID {self.start_uid}:*')[1][0].split()
+        else:
+            search_results = self.imap_client.uid('search', None, 'ALL')[1][0].split()
+
         len_results = len(search_results)
         for i, uid in enumerate(search_results):
             uid = uid.decode()
