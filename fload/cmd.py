@@ -88,6 +88,8 @@ def main():
             
             if ret:
                 print(json.dumps(ret))
+                sys.stdout.flush()
+                
         except Exception as ex:
             logger.error('Error when processing item %s', item, exc_info=ex)
             sys.exit(1)
