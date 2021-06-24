@@ -95,12 +95,13 @@ class ImapClient:
 
 
 def try_decode(b, encodings):
+    last_ex = None
     for encoding in encodings:
         try:
             return b.decode(encoding)
-        except UnicodeDecodeError:
-            pass
-    raise UnicodeDecodeError(encoding, b)
+        except UnicodeDecodeError as ex:
+            last_ex = ex
+    raise last_ex 
 
 
 def get_header(message, header_name):
@@ -112,7 +113,10 @@ def get_header(message, header_name):
     try:
         return ''.join([ensure_text(t[0], t[1] or default_charset) for t in dh])
     except (UnicodeDecodeError, LookupError):
-        return ''.join([try_decode(t[0], ['gbk', 'utf8']) for t in dh])
+        try:
+            return ''.join([try_decode(t[0], ['ascii', 'gbk', 'utf8']) for t in dh])
+        except UnicodeDecodeError:
+            return str(header)
 
 
 class ImapScaner(Source):
