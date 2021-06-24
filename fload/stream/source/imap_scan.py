@@ -132,7 +132,7 @@ class ImapScaner(Source):
         parser.add_argument('--imap-user')
         parser.add_argument('--imap-pass')
         parser.add_argument('--mailbox', default='INBOX')
-        parser.add_argument('--list-mailboxes', type=bool, default=False, nargs='?')
+        parser.add_argument('--list-mailboxes', action='store_true', default=False)
         parser.add_argument('--start-uid', type=int, default=1)
         parser.add_argument('--start-uid-file')
 
