@@ -13,6 +13,7 @@ class LastFieldToFile(Pipeline):
 
     def process(self, item):
         field_value = item[self.field]
+        field_value = str(field_value)
         with open(self.dest_file, 'w') as f:
             f.write(field_value)
         

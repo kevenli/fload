@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import logging
 import json
 import pkg_resources
@@ -20,6 +21,9 @@ def load_module(module_name):
         module_class = load_external_module(module_name)
 
     if not module_class:
+        module_class = load_from_python_module(module_name)
+
+    if not module_class:
         return None
 
     module_instance = module_class()
@@ -32,6 +36,16 @@ def load_external_module(module_name):
         if hasattr(module, module_name):
             module_class = getattr(module, module_name)
             return module_class
+
+
+def load_from_python_module(module_name):
+    try:
+        m, c = module_name.split(':', 1)
+        module_loaded = importlib.import_module(m)
+        class_loaded = getattr(module_loaded, c)
+        return class_loaded
+    except (ModuleNotFoundError, AttributeError, ValueError):
+        pass
 
 
 def _pop_module_name(argv):
@@ -88,6 +102,8 @@ def main():
             
             if ret:
                 print(json.dumps(ret))
+                sys.stdout.flush()
+                
         except Exception as ex:
             logger.error('Error when processing item %s', item, exc_info=ex)
             sys.exit(1)
