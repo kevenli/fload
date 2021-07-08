@@ -31,11 +31,15 @@ def load_module(module_name):
 
 
 def load_external_module(module_name):
+    searched_entrypoints = []
     for entrypoint in pkg_resources.iter_entry_points('fload_modules'):
+        searched_entrypoints.append(entrypoint)
         module = entrypoint.load()
         if hasattr(module, module_name):
             module_class = getattr(module, module_name)
+            logger.debug('module loaded from %s, %s', entrypoint, module)
             return module_class
+    logger.debug('no module found in entrypoints %s', searched_entrypoints)
 
 
 def load_from_python_module(module_name):
@@ -43,8 +47,10 @@ def load_from_python_module(module_name):
         m, c = module_name.split(':', 1)
         module_loaded = importlib.import_module(m)
         class_loaded = getattr(module_loaded, c)
+        logger.debug('module loaded from %s, %s', module_loaded, c)
         return class_loaded
-    except (ModuleNotFoundError, AttributeError, ValueError):
+    except (ModuleNotFoundError, AttributeError, ValueError) as ex:
+        logger.warn('load module error, %s', ex)
         pass
 
 
@@ -80,6 +86,8 @@ def main():
         parser.print_help()
         sys.exit(1)
 
+    setup_logging()
+
     mod = load_module(module_name)
     if mod is None:
         parser.error("module %s not found." % module_name)
@@ -93,7 +101,7 @@ def main():
     if hasattr(mod, 'init'):
         getattr(mod, 'init')(ops)
 
-    setup_logging()
+    
     
     for line in sys.stdin:
         item = json.loads(line)
