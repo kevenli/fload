@@ -13,7 +13,7 @@ def read_file(filename):
 
 setup(
     name='fload',
-    version='0.0.3',
+    version='0.0.4',
     description='fload is a data processing toolkit.', 
     packages=find_packages(),
     entry_points={
