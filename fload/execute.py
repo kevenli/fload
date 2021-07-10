@@ -1,11 +1,11 @@
 import argparse
-import importlib
 import logging
 import json
 import pkg_resources
 import sys
+import types
 
-from .log import setup_logging
+from fload.log import setup_logging
 
 logger = logging.getLogger(__name__)
 
@@ -21,9 +21,6 @@ def load_module(module_name):
         module_class = load_external_module(module_name)
 
     if not module_class:
-        module_class = load_from_python_module(module_name)
-
-    if not module_class:
         return None
 
     module_instance = module_class()
@@ -31,27 +28,11 @@ def load_module(module_name):
 
 
 def load_external_module(module_name):
-    searched_entrypoints = []
     for entrypoint in pkg_resources.iter_entry_points('fload_modules'):
-        searched_entrypoints.append(entrypoint)
         module = entrypoint.load()
         if hasattr(module, module_name):
             module_class = getattr(module, module_name)
-            logger.debug('module loaded from %s, %s', entrypoint, module)
             return module_class
-    logger.debug('no module found in entrypoints %s', searched_entrypoints)
-
-
-def load_from_python_module(module_name):
-    try:
-        m, c = module_name.split(':', 1)
-        module_loaded = importlib.import_module(m)
-        class_loaded = getattr(module_loaded, c)
-        logger.debug('module loaded from %s, %s', module_loaded, c)
-        return class_loaded
-    except (ModuleNotFoundError, AttributeError, ValueError) as ex:
-        logger.warn('load module error, %s', ex)
-        pass
 
 
 def _pop_module_name(argv):
@@ -63,11 +44,11 @@ def _pop_module_name(argv):
         i += 1
 
 
-def main():
+def execute():
     from fload import __version__ as version
     argv = sys.argv
 
-    usage = '%(prog)s command\r\n'
+    usage = '%(prog)s module [options]\r\n'
     parser = argparse.ArgumentParser('fload', usage=usage)
     parser.add_argument('-V', '--version', action='version', default=False,
                     version='%(prog)s {version}'.format(version=version))
@@ -82,11 +63,9 @@ def main():
             print('fload %s' % version)
             sys.exit(0)
 
-        print('Please specify command.')
+        print('Please specify module.')
         parser.print_help()
         sys.exit(1)
-
-    setup_logging()
 
     mod = load_module(module_name)
     if mod is None:
@@ -100,20 +79,33 @@ def main():
     
     if hasattr(mod, 'init'):
         getattr(mod, 'init')(ops)
-   
-    
-    for line in sys.stdin:
-        item = json.loads(line)
+
+    setup_logging()
+
+    if hasattr(mod, 'start'):
+        for item in run_start(mod):
+            print(json.dumps(item))
+
+    if hasattr(mod, 'process'):
         try:
-            ret = mod.process(item)
-            
-            if ret:
-                print(json.dumps(ret))
-                sys.stdout.flush()
-                
+            for line in sys.stdin:
+                item = json.loads(line)
+                ret = mod.process(item)
+                if ret:
+                    print(json.dumps(ret))
+
         except Exception as ex:
             logger.error('Error when processing item %s', item, exc_info=ex)
             sys.exit(1)
+
+
+def run_start(mod):
+    ret = mod.start()
+    if not isinstance(ret, types.GeneratorType):
+        ret = [ret]
+    
+    for item in ret:
+        yield item
 
 
 if __name__ == '__main__':

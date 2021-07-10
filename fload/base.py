@@ -1,8 +1,10 @@
+import argparse
+
 class FloadModule:
     def init(self, ops):
         pass
 
-    def add_arguments(self, parser):
+    def add_arguments(self, parser:argparse.ArgumentParser):
         pass 
 
 
