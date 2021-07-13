@@ -1,4 +1,5 @@
 import argparse
+import importlib
 import logging
 import json
 import pkg_resources
@@ -21,10 +22,23 @@ def load_module(module_name):
         module_class = load_external_module(module_name)
 
     if not module_class:
+        module_class = load_from_python_module(module_name)
+
+    if not module_class:
         return None
 
     module_instance = module_class()
     return module_instance
+
+
+def load_builtin_module(module_name):
+    import fload.stream as base_module
+
+    module_class = None
+    if hasattr(base_module, module_name):
+        module_class = getattr(base_module, module_name)
+
+    return module_class
 
 
 def load_external_module(module_name):
@@ -33,6 +47,18 @@ def load_external_module(module_name):
         if hasattr(module, module_name):
             module_class = getattr(module, module_name)
             return module_class
+
+
+def load_from_python_module(module_name):
+    try:
+        m, c = module_name.split(':', 1)
+        module_loaded = importlib.import_module(m)
+        class_loaded = getattr(module_loaded, c)
+        logger.debug('module loaded from %s, %s', module_loaded, c)
+        return class_loaded
+    except (ModuleNotFoundError, AttributeError, ValueError) as ex:
+        logger.warn('load module error, %s', ex)
+        pass
 
 
 def _pop_module_name(argv):
