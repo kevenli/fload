@@ -108,7 +108,7 @@ def execute():
     try:
         run_module(mod)
     except Exception as ex:
-        logger.error('Error when processing %s', exc_info=ex)
+        logger.error('Error when running module', exc_info=ex)
         sys.exit(1)
     
 

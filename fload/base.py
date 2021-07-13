@@ -8,7 +8,7 @@ class FloadModule:
         pass
 
     def add_arguments(self, parser:argparse.ArgumentParser):
-        pass 
+        pass
 
     def emit(self, item):
         sys.stdout.write(json.dumps(item) + '\n')
@@ -17,6 +17,9 @@ class FloadModule:
         """
         start run the module, emit new items or process item.
         """
+        pass
+
+    def on_close(self):
         pass
 
 
@@ -30,6 +33,7 @@ class Pipeline(FloadModule):
             ret = self.process(item)
             if ret:
                self.emit(ret)
+        self.on_close()
 
 
 def run_start(mod):
@@ -48,3 +52,5 @@ class Source(FloadModule):
     def start_run(self):
         for item in run_start(self):
             self.emit(item)
+
+        self.on_close()
