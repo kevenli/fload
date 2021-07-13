@@ -3,6 +3,7 @@ import csv
 
 class CSVSource(Source):
     csv_file = None
+    encoding = 'utf8'
 
     def add_arguments(self, parser):
         parser.add_argument('csvfile')
@@ -13,6 +14,8 @@ class CSVSource(Source):
         self.encoding = ops.encoding or 'UTF8'
 
     def start(self):
-        input_file = csv.DictReader(open(self.csv_file, encoding=self.encoding),)
+        f = open(self.csv_file, encoding=self.encoding)
+        input_file = csv.DictReader(f)
         for row in input_file:
             yield row
+        f.close()

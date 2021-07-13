@@ -78,10 +78,7 @@ def execute():
     parser = argparse.ArgumentParser('fload', usage=usage)
     parser.add_argument('-V', '--version', action='version', default=False,
                     version='%(prog)s {version}'.format(version=version))
-    # parser.add_argument('module')
     module_name = _pop_module_name(argv)
-    # ops = parser.parse_args()
-    
 
     if module_name is None:
         ops = parser.parse_args()
@@ -108,21 +105,27 @@ def execute():
 
     setup_logging()
 
-    if hasattr(mod, 'start'):
-        for item in run_start(mod):
-            print(json.dumps(item))
+    try:
+        run_module(mod)
+    except Exception as ex:
+        logger.error('Error when processing %s', exc_info=ex)
+        sys.exit(1)
+    
 
-    if hasattr(mod, 'process'):
-        try:
+def run_module(mod):
+    if hasattr(mod, 'start_run'):
+        mod.start_run()
+    else:
+        if hasattr(mod, 'start'):
+            for item in run_start(mod):
+                print(json.dumps(item))
+
+        if hasattr(mod, 'process'):
             for line in sys.stdin:
                 item = json.loads(line)
                 ret = mod.process(item)
                 if ret:
                     print(json.dumps(ret))
-
-        except Exception as ex:
-            logger.error('Error when processing item %s', item, exc_info=ex)
-            sys.exit(1)
 
 
 def run_start(mod):
@@ -132,8 +135,3 @@ def run_start(mod):
     
     for item in ret:
         yield item
-
-
-if __name__ == '__main__':
-    main()
-
