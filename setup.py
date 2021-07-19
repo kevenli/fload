@@ -15,7 +15,7 @@ setup(
     name='fload',
     version='0.0.5',
     description='fload is a data processing toolkit.', 
-    packages=find_packages(),
+    packages=find_packages(exclude=('tests', 'tests.*')),
     entry_points={
         'console_scripts': [
             'fload = fload.cmds.fload:main',
